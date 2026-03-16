@@ -1,0 +1,4 @@
+aws_region          = "us-east-1"
+environment         = "dev"
+notification_email  = "parthojar@gmail.com"
+project_name        = "aws-ai-security-orchestration"

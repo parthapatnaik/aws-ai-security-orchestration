@@ -1,0 +1,81 @@
+{
+  "Comment": "AWS AI Security Orchestration Workflow - Phase 3",
+  "StartAt": "AnalyzeEvent",
+  "States": {
+    "AnalyzeEvent": {
+      "Type": "Task",
+      "Resource": "${analyzer_lambda_arn}",
+      "Next": "ScoreRisk"
+    },
+    "ScoreRisk": {
+      "Type": "Task",
+      "Resource": "${risk_scoring_lambda_arn}",
+      "Next": "StoreFinding"
+    },
+    "StoreFinding": {
+      "Type": "Task",
+      "Resource": "${findings_writer_lambda_arn}",
+      "Next": "CheckSeverity"
+    },
+    "CheckSeverity": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.severity",
+          "StringEquals": "high",
+          "Next": "RequestApproval"
+        },
+        {
+          "Variable": "$.severity",
+          "StringEquals": "critical",
+          "Next": "RequestApproval"
+        }
+      ],
+      "Default": "Notify"
+    },
+    "RequestApproval": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "Parameters": {
+        "FunctionName": "${approval_request_lambda_arn}",
+        "Payload": {
+          "finding.$": "$",
+          "taskToken.$": "$$.Task.Token"
+        }
+      },
+      "TimeoutSeconds": 86400,
+      "Next": "CheckApprovalDecision"
+    },
+    "CheckApprovalDecision": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.approval_status",
+          "StringEquals": "APPROVED",
+          "Next": "Remediate"
+        }
+      ],
+      "Default": "NotifyAfterApproval"
+    },
+    "Remediate": {
+      "Type": "Task",
+      "Resource": "${remediator_lambda_arn}",
+      "Next": "NotifyAfterRemediation"
+    },
+    "Notify": {
+      "Type": "Task",
+      "Resource": "${notifier_lambda_arn}",
+      "End": true
+    },
+    "NotifyAfterApproval": {
+      "Type": "Task",
+      "Resource": "${notifier_lambda_arn}",
+      "End": true
+    },
+    "NotifyAfterRemediation": {
+      "Type": "Task",
+      "Resource": "${notifier_lambda_arn}",
+      "End": true
+    }
+  }
+}
