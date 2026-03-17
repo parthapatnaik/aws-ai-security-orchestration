@@ -1,5 +1,6 @@
 import json
 
+
 def lambda_handler(event, context):
     event_type = event.get("event_type", "")
     severity_hint = event.get("severity_hint", "medium")
@@ -27,5 +28,15 @@ def lambda_handler(event, context):
     event["risk_reason"] = reasons or ["Default scoring logic applied"]
     event["approval_required"] = severity in ["high", "critical"]
 
-    print(json.dumps({"stage": "risk_scoring", "finding": event}))
+    print(
+        json.dumps(
+            {
+                "stage": "risk_scoring",
+                "finding_id": event.get("finding_id"),
+                "severity": event.get("severity"),
+                "risk_score": event.get("risk_score"),
+                "approval_required": event.get("approval_required"),
+            }
+        )
+    )
     return event

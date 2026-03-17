@@ -1,8 +1,9 @@
-import json
 import os
 import urllib.parse
-from decimal import Decimal
+
 import boto3
+
+from common.utils import log_event
 
 
 dynamodb = boto3.resource("dynamodb")
@@ -11,16 +12,6 @@ sns = boto3.client("sns")
 topic_arn = os.environ["SNS_TOPIC_ARN"]
 approval_base_url = os.environ["APPROVAL_BASE_URL"].rstrip("/")
 approval_callback_token = os.environ["APPROVAL_CALLBACK_TOKEN"]
-
-
-def convert_numbers(value):
-    if isinstance(value, float):
-        return Decimal(str(value))
-    if isinstance(value, dict):
-        return {k: convert_numbers(v) for k, v in value.items()}
-    if isinstance(value, list):
-        return [convert_numbers(v) for v in value]
-    return value
 
 
 def lambda_handler(event, context):
@@ -35,8 +26,8 @@ def lambda_handler(event, context):
         ExpressionAttributeValues={
             ":s": "PENDING_APPROVAL",
             ":t": task_token,
-            ":a": True
-        }
+            ":a": True,
+        },
     )
 
     approve_url = (
@@ -69,12 +60,17 @@ Reject:
     sns.publish(
         TopicArn=topic_arn,
         Subject=f"[APPROVAL REQUIRED] {finding.get('event_type', 'security finding')}"[:100],
-        Message=message
+        Message=message,
     )
 
-    print(json.dumps({"stage": "approval_request", "finding_id": finding_id, "approve_url": approve_url}))
+    log_event(
+        "approval_request",
+        finding_id=finding_id,
+        severity=finding.get("severity"),
+        status="PENDING_APPROVAL",
+    )
     return {
         "finding_id": finding_id,
         "status": "PENDING_APPROVAL",
-        "message": "Approval request sent"
+        "message": "Approval request sent",
     }

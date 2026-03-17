@@ -2,6 +2,7 @@ import json
 import uuid
 from datetime import datetime, timezone
 
+
 def lambda_handler(event, context):
     detail = event.get("detail", {})
 
@@ -15,8 +16,17 @@ def lambda_handler(event, context):
         "severity_hint": detail.get("severity_hint", "medium"),
         "summary": detail.get("summary", "Security event detected"),
         "status": "OPEN",
-        "raw_event": event
+        "raw_event": event,
     }
 
-    print(json.dumps({"stage": "analyzer", "finding": finding}))
+    print(
+        json.dumps(
+            {
+                "stage": "analyzer",
+                "finding_id": finding["finding_id"],
+                "severity_hint": finding["severity_hint"],
+                "status": finding["status"],
+            }
+        )
+    )
     return finding

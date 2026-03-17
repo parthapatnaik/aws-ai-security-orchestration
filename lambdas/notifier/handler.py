@@ -1,9 +1,12 @@
 import json
 import os
+
 import boto3
+
 
 sns = boto3.client("sns")
 topic_arn = os.environ["SNS_TOPIC_ARN"]
+
 
 def lambda_handler(event, context):
     subject = f"[{event.get('severity', 'unknown').upper()}] Security finding update"
@@ -28,8 +31,17 @@ Remediation Target: {event.get("remediation_target", "N/A")}
     sns.publish(
         TopicArn=topic_arn,
         Subject=subject[:100],
-        Message=message
+        Message=message,
     )
 
-    print(json.dumps({"stage": "notifier", "finding_id": event.get("finding_id")}))
+    print(
+        json.dumps(
+            {
+                "stage": "notifier",
+                "finding_id": event.get("finding_id"),
+                "severity": event.get("severity"),
+                "status": event.get("status"),
+            }
+        )
+    )
     return event

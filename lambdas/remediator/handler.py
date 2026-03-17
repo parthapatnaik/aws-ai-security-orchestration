@@ -23,6 +23,12 @@ def pick_ip(event):
     return None
 
 
+def to_cidr(ip_value):
+    if not ip_value:
+        return None
+    return ip_value if "/" in ip_value else f"{ip_value}/32"
+
+
 def lambda_handler(event, context):
     finding_id = event.get("finding_id")
     target_ip = pick_ip(event)
@@ -33,13 +39,9 @@ def lambda_handler(event, context):
     remediation_error = ""
 
     if target_ip:
-        cidr = target_ip if "/" in target_ip else f"{target_ip}/32"
+        cidr = to_cidr(target_ip)
         try:
-            current = waf.get_ip_set(
-                Name=IP_SET_NAME,
-                Scope=WAF_SCOPE,
-                Id=IP_SET_ID
-            )
+            current = waf.get_ip_set(Name=IP_SET_NAME, Scope=WAF_SCOPE, Id=IP_SET_ID)
 
             addresses = list(current.get("IPSet", {}).get("Addresses", []))
             if cidr not in addresses:
@@ -50,7 +52,7 @@ def lambda_handler(event, context):
                 Scope=WAF_SCOPE,
                 Id=IP_SET_ID,
                 Addresses=addresses,
-                LockToken=current["LockToken"]
+                LockToken=current["LockToken"],
             )
 
             remediation_status = "SUCCESS"
@@ -71,7 +73,10 @@ def lambda_handler(event, context):
 
     table.update_item(
         Key={"finding_id": finding_id},
-        UpdateExpression="SET remediation_status = :rs, remediation_action = :ra, remediation_target = :rt, remediation_error = :re, remediation_timestamp = :rts, #s = :s",
+        UpdateExpression=(
+            "SET remediation_status = :rs, remediation_action = :ra, remediation_target = :rt, "
+            "remediation_error = :re, remediation_timestamp = :rts, #s = :s"
+        ),
         ExpressionAttributeNames={"#s": "status"},
         ExpressionAttributeValues={
             ":rs": remediation_status,
@@ -79,15 +84,19 @@ def lambda_handler(event, context):
             ":rt": remediation_target,
             ":re": remediation_error,
             ":rts": event["remediation_timestamp"],
-            ":s": event["status"]
-        }
+            ":s": event["status"],
+        },
     )
 
-    print(json.dumps({
-        "stage": "remediator",
-        "finding_id": finding_id,
-        "remediation_status": remediation_status,
-        "remediation_target": remediation_target,
-        "remediation_error": remediation_error
-    }))
+    print(
+        json.dumps(
+            {
+                "stage": "remediator",
+                "finding_id": finding_id,
+                "remediation_status": remediation_status,
+                "remediation_target": remediation_target,
+                "remediation_error": remediation_error,
+            }
+        )
+    )
     return event

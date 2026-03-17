@@ -12,7 +12,7 @@ data "archive_file" "risk_scoring_zip" {
 
 data "archive_file" "findings_writer_zip" {
   type        = "zip"
-  source_file = "${path.module}/../lambdas/findings_writer/handler.py"
+  source_dir  = "${path.module}/../lambdas"
   output_path = "${path.module}/../lambdas/findings_writer/findings_writer.zip"
 }
 
@@ -24,7 +24,7 @@ data "archive_file" "notifier_zip" {
 
 data "archive_file" "approval_request_zip" {
   type        = "zip"
-  source_file = "${path.module}/../lambdas/approval_request/handler.py"
+  source_dir  = "${path.module}/../lambdas"
   output_path = "${path.module}/../lambdas/approval_request/approval_request.zip"
 }
 
@@ -51,8 +51,7 @@ resource "aws_lambda_function" "analyzer" {
 
   environment {
     variables = {
-      FINDINGS_TABLE          = aws_dynamodb_table.findings.name
-      APPROVAL_CALLBACK_TOKEN = var.approval_callback_token
+      FINDINGS_TABLE = aws_dynamodb_table.findings.name
       SNS_TOPIC_ARN  = aws_sns_topic.alerts.arn
     }
   }
@@ -83,7 +82,7 @@ resource "aws_lambda_function" "findings_writer" {
   function_name    = "${local.name_prefix}-findings-writer"
   role             = aws_iam_role.lambda_execution_role.arn
   runtime          = "python3.12"
-  handler          = "handler.lambda_handler"
+  handler          = "findings_writer.handler.lambda_handler"
   filename         = data.archive_file.findings_writer_zip.output_path
   source_code_hash = data.archive_file.findings_writer_zip.output_base64sha256
   timeout          = 30
@@ -121,7 +120,7 @@ resource "aws_lambda_function" "approval_request" {
   function_name    = "${local.name_prefix}-approval-request"
   role             = aws_iam_role.lambda_execution_role.arn
   runtime          = "python3.12"
-  handler          = "handler.lambda_handler"
+  handler          = "approval_request.handler.lambda_handler"
   filename         = data.archive_file.approval_request_zip.output_path
   source_code_hash = data.archive_file.approval_request_zip.output_base64sha256
   timeout          = 30
@@ -130,7 +129,7 @@ resource "aws_lambda_function" "approval_request" {
     variables = {
       FINDINGS_TABLE    = aws_dynamodb_table.findings.name
       SNS_TOPIC_ARN     = aws_sns_topic.alerts.arn
-      APPROVAL_BASE_URL      = aws_api_gateway_stage.approval.invoke_url
+      APPROVAL_BASE_URL       = aws_api_gateway_stage.approval.invoke_url
       APPROVAL_CALLBACK_TOKEN = var.approval_callback_token
     }
   }
@@ -149,7 +148,8 @@ resource "aws_lambda_function" "approval_callback" {
 
   environment {
     variables = {
-      FINDINGS_TABLE = aws_dynamodb_table.findings.name
+      FINDINGS_TABLE          = aws_dynamodb_table.findings.name
+      APPROVAL_CALLBACK_TOKEN = var.approval_callback_token
     }
   }
 
