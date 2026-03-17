@@ -51,7 +51,8 @@ resource "aws_lambda_function" "analyzer" {
 
   environment {
     variables = {
-      FINDINGS_TABLE = aws_dynamodb_table.findings.name
+      FINDINGS_TABLE          = aws_dynamodb_table.findings.name
+      APPROVAL_CALLBACK_TOKEN = var.approval_callback_token
       SNS_TOPIC_ARN  = aws_sns_topic.alerts.arn
     }
   }
@@ -129,7 +130,8 @@ resource "aws_lambda_function" "approval_request" {
     variables = {
       FINDINGS_TABLE    = aws_dynamodb_table.findings.name
       SNS_TOPIC_ARN     = aws_sns_topic.alerts.arn
-      APPROVAL_BASE_URL = aws_api_gateway_stage.approval.invoke_url
+      APPROVAL_BASE_URL      = aws_api_gateway_stage.approval.invoke_url
+      APPROVAL_CALLBACK_TOKEN = var.approval_callback_token
     }
   }
 

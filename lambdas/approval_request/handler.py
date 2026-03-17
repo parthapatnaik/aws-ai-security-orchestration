@@ -4,11 +4,14 @@ import urllib.parse
 from decimal import Decimal
 import boto3
 
+
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table(os.environ["FINDINGS_TABLE"])
 sns = boto3.client("sns")
 topic_arn = os.environ["SNS_TOPIC_ARN"]
 approval_base_url = os.environ["APPROVAL_BASE_URL"].rstrip("/")
+approval_callback_token = os.environ["APPROVAL_CALLBACK_TOKEN"]
+
 
 def convert_numbers(value):
     if isinstance(value, float):
@@ -18,6 +21,7 @@ def convert_numbers(value):
     if isinstance(value, list):
         return [convert_numbers(v) for v in value]
     return value
+
 
 def lambda_handler(event, context):
     finding = event["finding"]
@@ -35,8 +39,14 @@ def lambda_handler(event, context):
         }
     )
 
-    approve_url = f"{approval_base_url}/approval?finding_id={urllib.parse.quote(finding_id)}&decision=approve"
-    reject_url = f"{approval_base_url}/approval?finding_id={urllib.parse.quote(finding_id)}&decision=reject"
+    approve_url = (
+        f"{approval_base_url}/approval?finding_id={urllib.parse.quote(finding_id)}"
+        f"&decision=approve&token={urllib.parse.quote(approval_callback_token)}"
+    )
+    reject_url = (
+        f"{approval_base_url}/approval?finding_id={urllib.parse.quote(finding_id)}"
+        f"&decision=reject&token={urllib.parse.quote(approval_callback_token)}"
+    )
 
     message = f"""
 Approval required for high-severity finding.

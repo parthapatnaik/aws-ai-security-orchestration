@@ -5,17 +5,83 @@
     "AnalyzeEvent": {
       "Type": "Task",
       "Resource": "${analyzer_lambda_arn}",
-      "Next": "ScoreRisk"
+      "Next": "ScoreRisk",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "States.TaskFailed"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "NotifyFailure"
+        }
+      ]
     },
     "ScoreRisk": {
       "Type": "Task",
       "Resource": "${risk_scoring_lambda_arn}",
-      "Next": "StoreFinding"
+      "Next": "StoreFinding",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "States.TaskFailed"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "NotifyFailure"
+        }
+      ]
     },
     "StoreFinding": {
       "Type": "Task",
       "Resource": "${findings_writer_lambda_arn}",
-      "Next": "CheckSeverity"
+      "Next": "CheckSeverity",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "States.TaskFailed"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "NotifyFailure"
+        }
+      ]
     },
     "CheckSeverity": {
       "Type": "Choice",
@@ -44,7 +110,29 @@
         }
       },
       "TimeoutSeconds": 86400,
-      "Next": "CheckApprovalDecision"
+      "Next": "CheckApprovalDecision",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "States.TaskFailed"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "NotifyFailure"
+        }
+      ]
     },
     "CheckApprovalDecision": {
       "Type": "Choice",
@@ -60,7 +148,29 @@
     "Remediate": {
       "Type": "Task",
       "Resource": "${remediator_lambda_arn}",
-      "Next": "NotifyAfterRemediation"
+      "Next": "NotifyAfterRemediation",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "States.TaskFailed"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "NotifyFailure"
+        }
+      ]
     },
     "Notify": {
       "Type": "Task",
@@ -73,6 +183,11 @@
       "End": true
     },
     "NotifyAfterRemediation": {
+      "Type": "Task",
+      "Resource": "${notifier_lambda_arn}",
+      "End": true
+    },
+    "NotifyFailure": {
       "Type": "Task",
       "Resource": "${notifier_lambda_arn}",
       "End": true

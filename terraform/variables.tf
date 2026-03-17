@@ -26,3 +26,9 @@ variable "waf_scope" {
   type        = string
   default     = "REGIONAL"
 }
+
+variable "approval_callback_token" {
+  description = "Shared token for approval callback URL validation"
+  type        = string
+  default     = "demo-approval-token"
+}
