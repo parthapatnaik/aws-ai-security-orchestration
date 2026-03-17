@@ -32,3 +32,9 @@ variable "approval_callback_token" {
   type        = string
   default     = "demo-approval-token"
 }
+
+variable "bedrock_model_id" {
+  description = "Amazon Bedrock model ID used by the Analyzer Lambda for AI threat enrichment"
+  type        = string
+  default     = "anthropic.claude-3-haiku-20240307-v1:0"
+}

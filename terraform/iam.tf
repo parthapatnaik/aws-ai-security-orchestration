@@ -78,6 +78,11 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
         Effect   = "Allow"
         Action   = ["wafv2:GetIPSet", "wafv2:UpdateIPSet"]
         Resource = aws_wafv2_ip_set.blocked_ips.arn
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["bedrock:InvokeModel"]
+        Resource = "arn:aws:bedrock:${var.aws_region}::foundation-model/anthropic.claude-3-haiku-20240307-v1:0"
       }
     ]
   })

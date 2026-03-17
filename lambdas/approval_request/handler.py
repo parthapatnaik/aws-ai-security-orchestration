@@ -49,6 +49,9 @@ Actor: {finding.get("actor")}
 Severity: {finding.get("severity")}
 Risk Score: {finding.get("risk_score")}
 Summary: {finding.get("summary")}
+Threat Category: {finding.get("threat_category", "N/A")}
+AI Analysis: {finding.get("ai_summary", "N/A")}
+Recommended Action: {finding.get("recommended_action", "N/A")}
 
 Approve:
 {approve_url}

@@ -21,6 +21,9 @@ Actor: {event.get("actor")}
 Severity: {event.get("severity")}
 Risk Score: {event.get("risk_score")}
 Summary: {event.get("summary")}
+Threat Category: {event.get("threat_category", "N/A")}
+AI Analysis: {event.get("ai_summary", "N/A")}
+Recommended Action: {event.get("recommended_action", "N/A")}
 Status: {event.get("status")}
 Approval Decision: {event.get("approval_status", "N/A")}
 Remediation Status: {event.get("remediation_status", "N/A")}

@@ -51,8 +51,9 @@ resource "aws_lambda_function" "analyzer" {
 
   environment {
     variables = {
-      FINDINGS_TABLE = aws_dynamodb_table.findings.name
-      SNS_TOPIC_ARN  = aws_sns_topic.alerts.arn
+      FINDINGS_TABLE   = aws_dynamodb_table.findings.name
+      SNS_TOPIC_ARN    = aws_sns_topic.alerts.arn
+      BEDROCK_MODEL_ID = var.bedrock_model_id
     }
   }
 

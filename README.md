@@ -29,7 +29,24 @@ High-level behavior:
 
 ### Architecture Diagram
 
-> Placeholder: add architecture diagram image here (e.g., `docs/architecture.png`) before final submission.
+```mermaid
+flowchart TD
+    EB["EventBridge\n(Security Threat Event)"] --> SFN["Step Functions\nOrchestration"]
+    SFN --> AN["Analyzer Lambda\n+ Bedrock Claude 3 Haiku"]
+    AN --> RS["Risk Scoring Lambda"]
+    RS --> FW["Findings Writer Lambda"]
+    FW --> DB[("DynamoDB\nFindings")]
+    FW --> CS{"Severity?"}
+    CS -- "Low / Medium" --> NO["Notifier Lambda\nSNS Email"]
+    CS -- "High / Critical" --> AR["Approval Request Lambda\nSNS Approval Email"]
+    USER["Approver\n(via email link)"] --> APIG["API Gateway\nGET /approval"]
+    APIG --> AC["Approval Callback Lambda"]
+    AC -- "SendTaskSuccess" --> SFN
+    SFN --> CD{"Decision?"}
+    CD -- "APPROVED" --> RE["Remediator Lambda\nWAFv2 IP Block"]
+    CD -- "REJECTED" --> NO
+    RE --> NO
+```
 
 ### Data Flow
 
@@ -50,6 +67,7 @@ High-level behavior:
 | EventBridge | Security event ingestion |
 | Step Functions | Workflow orchestration |
 | Lambda | Analysis, scoring, approval, remediation, notifications |
+| Amazon Bedrock (Claude 3 Haiku) | AI-powered threat enrichment and risk summarization |
 | DynamoDB | Findings storage |
 | SNS | Notification and approval emails |
 | API Gateway | Approval callback endpoint |
@@ -88,14 +106,21 @@ terraform/
 
 ## 6) GenAI Usage
 
-Current:
+The **Analyzer Lambda** calls **Amazon Bedrock** (Claude 3 Haiku) to enrich every incoming security finding before it is scored or stored.
 
-- This version uses deterministic, rule-based risk scoring to keep behavior explainable in demos.
+**What the AI does:**
+- Classifies the event into a `threat_category` (e.g. Privilege Escalation, Lateral Movement)
+- Generates an `ai_summary`: a 2-sentence risk assessment explaining the threat and its potential impact
+- Suggests a `recommended_action`: a single concrete immediate response step
 
-Hackathon extension path:
+**Model:** `anthropic.claude-3-haiku-20240307-v1:0` via Amazon Bedrock — fast, low-cost, available in us-east-1.
 
-- Add GenAI-assisted enrichment in `lambdas/analyzer/handler.py` (for event intent classification, concise risk summaries, and remediation rationale).
-- Keep final remediation gated by explicit human approval for high-risk actions.
+**How the AI output is used:**
+- Surfaced in the human approval email so the approver gets AI context alongside the raw finding
+- Included in the final SNS notification alongside remediation outcomes
+- Stored in DynamoDB as part of the finding record for audit purposes
+
+**Design intent:** The AI enrichment is additive — the deterministic rule-based scoring in `risk_scoring/handler.py` still drives the approval gate. This keeps behavior predictable and explainable while the AI provides human-readable context that a rule engine cannot. If Bedrock is unavailable, the workflow continues with fallback values and never fails due to AI unavailability.
 
 ## 7) Demo Walkthrough
 
@@ -135,21 +160,22 @@ Hackathon extension path:
 
 ## 9) Hackathon Tradeoffs (intentional)
 
-- Simple rule-based scoring instead of full ML/LLM pipeline
+- Deterministic rule-based scoring drives the approval gate (keeps behavior predictable and demo-explainable); AI enrichment is additive
 - Email-link approval workflow for speed of implementation
 - Single-table DynamoDB model for fast iteration
 - Minimal test suite focused on critical logic paths
+- Static shared approval token (sufficient for a demo; production would use per-finding HMAC with expiry)
 
 ## 10) Future Improvements
 
 Possible enhancements include:
 
-- GuardDuty integration
-- Security Hub integration
-- LLM-powered threat analysis
+- GuardDuty / Security Hub integration for real alert sources
+- Replace rule-based scoring with AI-driven severity inference
 - SIEM integration
 - Multi-account security orchestration
-- Automated incident investigation
+- Automated incident investigation workflows
+- Per-finding HMAC approval tokens with expiry
 
 ## Author
 
