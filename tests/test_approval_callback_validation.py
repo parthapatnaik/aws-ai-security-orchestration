@@ -6,6 +6,7 @@ import unittest
 
 os.environ.setdefault("FINDINGS_TABLE", "dummy-table")
 os.environ.setdefault("APPROVAL_CALLBACK_TOKEN", "demo-approval-token")
+os.environ.setdefault("AWS_DEFAULT_REGION", "us-east-1")
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "lambdas" / "approval_callback" / "handler.py"
 spec = importlib.util.spec_from_file_location("approval_callback_handler", MODULE_PATH)

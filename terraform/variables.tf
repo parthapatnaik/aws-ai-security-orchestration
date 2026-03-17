@@ -30,7 +30,7 @@ variable "waf_scope" {
 variable "approval_callback_token" {
   description = "Shared token for approval callback URL validation"
   type        = string
-  default     = "demo-approval-token"
+  sensitive   = true
 }
 
 variable "bedrock_model_id" {

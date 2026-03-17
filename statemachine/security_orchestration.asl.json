@@ -111,19 +111,6 @@
       },
       "TimeoutSeconds": 86400,
       "Next": "CheckApprovalDecision",
-      "Retry": [
-        {
-          "ErrorEquals": [
-            "Lambda.ServiceException",
-            "Lambda.AWSLambdaException",
-            "Lambda.SdkClientException",
-            "States.TaskFailed"
-          ],
-          "IntervalSeconds": 2,
-          "MaxAttempts": 2,
-          "BackoffRate": 2
-        }
-      ],
       "Catch": [
         {
           "ErrorEquals": [

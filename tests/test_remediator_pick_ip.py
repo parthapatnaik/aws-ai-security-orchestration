@@ -9,6 +9,7 @@ os.environ.setdefault("WAF_IP_SET_ID", "dummy-id")
 os.environ.setdefault("WAF_IP_SET_NAME", "dummy-name")
 os.environ.setdefault("WAF_SCOPE", "REGIONAL")
 os.environ.setdefault("AWS_REGION_NAME", "us-east-1")
+os.environ.setdefault("AWS_DEFAULT_REGION", "us-east-1")
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "lambdas" / "remediator" / "handler.py"
 spec = importlib.util.spec_from_file_location("remediator_handler", MODULE_PATH)

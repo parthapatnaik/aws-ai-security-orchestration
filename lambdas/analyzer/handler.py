@@ -34,7 +34,7 @@ def _enrich_with_bedrock(finding):
         body = json.dumps({
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": 300,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
         })
         response = bedrock.invoke_model(
             modelId=BEDROCK_MODEL_ID,

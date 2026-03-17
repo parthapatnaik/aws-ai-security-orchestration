@@ -13,7 +13,8 @@ data "archive_file" "risk_scoring_zip" {
 data "archive_file" "findings_writer_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas"
-  output_path = "${path.module}/../lambdas/findings_writer/findings_writer.zip"
+  output_path = "${path.module}/findings_writer.zip"
+  excludes    = ["**/*.zip"]
 }
 
 data "archive_file" "notifier_zip" {
@@ -25,7 +26,8 @@ data "archive_file" "notifier_zip" {
 data "archive_file" "approval_request_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas"
-  output_path = "${path.module}/../lambdas/approval_request/approval_request.zip"
+  output_path = "${path.module}/approval_request.zip"
+  excludes    = ["**/*.zip"]
 }
 
 data "archive_file" "approval_callback_zip" {
