@@ -1,0 +1,12 @@
+{
+  "source": "custom.security",
+  "detail-type": "Security Threat Event",
+  "detail": {
+    "event_type": "console_login",
+    "resource_id": "account/root",
+    "actor": "known-user",
+    "severity_hint": "medium",
+    "summary": "Unusual login location detected",
+    "ip_address": "198.51.100.25"
+  }
+}

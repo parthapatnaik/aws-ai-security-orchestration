@@ -26,3 +26,15 @@ variable "waf_scope" {
   type        = string
   default     = "REGIONAL"
 }
+
+variable "approval_callback_token" {
+  description = "Shared token for approval callback URL validation"
+  type        = string
+  sensitive   = true
+}
+
+variable "bedrock_model_id" {
+  description = "Amazon Bedrock model ID used by the Analyzer Lambda for AI threat enrichment"
+  type        = string
+  default     = "anthropic.claude-3-haiku-20240307-v1:0"
+}

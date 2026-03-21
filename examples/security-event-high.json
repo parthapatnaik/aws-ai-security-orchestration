@@ -1,0 +1,12 @@
+{
+  "source": "custom.security",
+  "detail-type": "Security Threat Event",
+  "detail": {
+    "event_type": "iam_policy_change",
+    "resource_id": "iam-role/admin-role",
+    "actor": "unknown-principal",
+    "severity_hint": "high",
+    "summary": "Unexpected IAM policy escalation detected",
+    "ip_address": "203.0.113.10"
+  }
+}
